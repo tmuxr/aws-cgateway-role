@@ -1,0 +1,91 @@
+### Global Options ###
+
+log     info;
+path    pre_shared_key          "/etc/racoon/psk.txt";
+path    certificate             "/etc/racoon/certs";
+
+listen
+{
+     isakmp {{ customer_gateway_external_ip }} [500];
+     strict_address;
+}
+
+### c1-vpn-aws ###
+
+# Tunnel 1 remote
+
+remote {{ tunnel_1_remote_external_ip }} [500]
+{
+    my_identifier               address {{ customer_gateway_external_ip }};
+    peers_identifier            address {{ tunnel_1_remote_external_ip }};
+
+    exchange_mode               main;
+    passive                     off;
+    nat_traversal               off;
+    dpd_delay                   10;
+    dpd_retry                   3;
+    send_cert                   off;
+    proposal_check              strict;
+    mode_cfg                    off;
+    weak_phase1_check           off;
+    generate_policy             off;
+
+    proposal
+    {
+        encryption_algorithm    aes128;
+        hash_algorithm          sha1;
+        authentication_method   pre_shared_key;
+        dh_group                2;
+        lifetime                time 28800 seconds;
+    }
+}
+
+# Tunnel 2 remote
+
+remote {{ tunnel_2_remote_external_ip }} [500]
+{
+    my_identifier               address {{ customer_gateway_external_ip }};
+    peers_identifier            address {{ tunnel_2_remote_external_ip }};
+
+    exchange_mode               main;
+    passive                     off;
+    nat_traversal               off;
+    dpd_delay                   10;
+    dpd_retry                   3;
+    send_cert                   off;
+    proposal_check              strict;
+    mode_cfg                    off;
+    weak_phase1_check           off;
+    generate_policy             off;
+
+    proposal
+    {
+        encryption_algorithm    aes128;
+        hash_algorithm          sha1;
+        authentication_method   pre_shared_key;
+        dh_group                2;
+        lifetime                time 28800 seconds;
+    }
+}
+
+# Tunnel 1 sainfo
+
+sainfo address {{ tunnel_1_local_internal_ip_with_cidr_suffix }} any address {{ tunnel_1_remote_internal_ip_with_cidr_suffix }} any
+{
+    pfs_group                   2;
+    lifetime                    time 3600 seconds;
+    encryption_algorithm        aes;
+    authentication_algorithm    hmac_sha1;
+    compression_algorithm       deflate;
+}
+
+# Tunnel 2 sainfo
+
+sainfo address {{ tunnel_2_local_internal_ip_with_cidr_suffix }} any address {{ tunnel_2_remote_internal_ip_with_cidr_suffix }} any
+{
+    pfs_group                   2;
+    lifetime                    time 3600 seconds;
+    encryption_algorithm        aes;
+    authentication_algorithm    hmac_sha1;
+    compression_algorithm       deflate;
+}
